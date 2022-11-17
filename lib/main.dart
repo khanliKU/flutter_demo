@@ -1,4 +1,9 @@
+import 'dart:ffi';
+import 'dart:io';
+import 'package:path/path.dart' as path;
 import 'package:flutter/material.dart';
+import 'package:flutter_demo/my_random.dart';
+import 'dart:math';
 
 void main() {
   runApp(const MyApp());
@@ -48,16 +53,33 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _displayValue = 0;
+  late MyRandom _randomGenerator;
+  double _sliderValue = 10.0 / 32.0;
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    late DynamicLibrary dl;
+    if (Platform.isAndroid) {
+      dl = DynamicLibrary.open('libmyRandom.so');
+    } else if (Platform.isIOS) {
+      dl = DynamicLibrary.process();
+    } else if (Platform.isWindows) {
+      dl = DynamicLibrary.open(path.join('myRandom.dll'));
+    }
+    _randomGenerator = MyRandom(dl);
+  }
+
+  void _newRandom() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      _displayValue =
+          _randomGenerator.myRandom(pow(2, _sliderValue * 32).ceil());
     });
   }
 
@@ -95,18 +117,27 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            Slider(
+              value: _sliderValue,
+              divisions: 32,
+              onChanged: (value) {
+                setState(() {
+                  _sliderValue = value;
+                });
+              },
             ),
             Text(
-              '$_counter',
+              'Max Random: ${pow(2, _sliderValue * 32).ceil()}',
+            ),
+            Text(
+              '$_displayValue',
               style: Theme.of(context).textTheme.headline4,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _newRandom,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
