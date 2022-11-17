@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "my_random.h": "c",
+        "limits.h": "c"
+    }
+}
