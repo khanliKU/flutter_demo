@@ -46,6 +46,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  msix: ^3.7.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -95,3 +96,11 @@ ffigen:
   headers:
     entry-points:
       - 'src/my_random.h'
+
+msix_config:
+  display_name: Flutter Demo
+  publisher_display_name: Analog Devices Inc.
+  identity_name: com.example.flutter-demo
+  msix_version: 1.0.0.0
+  sign_msix: false
+  publisher: CN = Maxim Integrated Products Inc.
