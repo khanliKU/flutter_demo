@@ -4,8 +4,8 @@ on:
       - main
       
 jobs:
-  my_job:
-    name: deploy to staging
+  android:
+    name: android
     runs-on: ubuntu-22.04
 
     steps:
@@ -19,6 +19,29 @@ jobs:
         flutter-version: '3.3.8'
     - run: flutter pub get
     - run: dart run ffigen
-#    - run: flutter test
     - run: flutter build apk
     - run: flutter build appbundle
+
+  ios:
+    name: ios
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.3.8'
+        architecture: x64
+    - run: flutter pub get
+    - run: dart run ffigen
+    - run: flutter build ios --release --no-codesign
+
+  windows:
+    name: windows
+    runs-on: windows-latest
+    steps:
+     - uses: actions/checkout@v3
+     - uses: subosito/flutter-action@v2
+       with:
+        flutter-version: '3.3.8'
+     - run: dart run ffigen
+     - run: flutter pub run msix:create
