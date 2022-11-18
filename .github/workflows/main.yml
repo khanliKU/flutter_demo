@@ -18,6 +18,7 @@ jobs:
       with:
         flutter-version: '3.3.8'
     - run: flutter pub get
+    - run: dart run ffigen
     - run: flutter test
     - run: flutter build apk
     - run: flutter build appbundle
