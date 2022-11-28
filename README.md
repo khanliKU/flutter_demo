@@ -17,7 +17,7 @@ Install the following software to start
  - ![Android SDK Tools to install](./android_sdk_tools.PNG)
  - Create and launch Android Virtual Device: Tools -> Device Manager -> Create/Start device.
  - Create an in IDE terminal: View -> Tool Windows -> Terminal.
- - Finish installing Flutter: run "$(Your flutter SDK Path)\bin\flutter doctor" and complete missing steps.
+ - Finish installing Flutter: run `$(Your flutter SDK Path)\bin\flutter doctor` and complete missing steps.
 
 ## FFIGEN
  - [Package Pub.dev page](https://pub.dev/packages/ffigen)
@@ -26,6 +26,6 @@ Install LLVM: `winget install -e --id LLVM.LLVM` for windows
 ## Run
  - Launch Android Virtual Device
  - Create an in IDE terminal: View -> Tool Windows -> Terminal.
- - Run "$(Your flutter SDK Path)\bin\flutter pub get". This will pull required packages.
- - Run "$(Your flutter SDK Path)\bin\dart run ffigen". This will create a Dart interface for our C library.
- - Run "$(Your flutter SDK Path)\bin\flutter run". This will start building and running our application. It should prompt us to select a device to run on.
+ - Run `$(Your flutter SDK Path)\bin\flutter pub get`. This will pull required packages.
+ - Run `$(Your flutter SDK Path)\bin\dart run ffigen`. This will create a Dart interface for our C library.
+ - Run `$(Your flutter SDK Path)\bin\flutter run`. This will start building and running our application. It should prompt us to select a device to run on.
