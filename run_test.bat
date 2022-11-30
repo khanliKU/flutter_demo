@@ -1,0 +1,1 @@
+flutter drive --target=test\app.dart --driver=test\windows_test.dart -d windows

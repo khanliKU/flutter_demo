@@ -149,6 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   const Text('CBC'),
                   Switch(
+                    key: const Key('cipher_switch'),
                     value: isEcb,
                     onChanged: (value) {
                       setState(() {
@@ -166,13 +167,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   Expanded(
                     flex: 10,
                     child: TextField(
+                      key: const Key('plainTextField'),
                       controller: _plainTextController,
                       maxLines: null,
                       style: const TextStyle(fontFamily: 'Consolas'),
                     ),
                   ),
                   ElevatedButton(
-                      onPressed: _encryptText, child: const Text('Encrypt')),
+                      key: const Key('encrypt_button'),
+                      onPressed: _encryptText,
+                      child: const Text('Encrypt')),
                 ],
               ),
               Row(
@@ -189,6 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   ElevatedButton(
+                    key: Key('decrypt_button'),
                     onPressed: _decryptText,
                     child: const Text('Decrypt'),
                   ),
