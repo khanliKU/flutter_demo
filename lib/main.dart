@@ -15,7 +15,7 @@ import 'package:window_manager/window_manager.dart';
 import './devices.dart';
 
 void main() async {
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  /*if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     WidgetsFlutterBinding.ensureInitialized();
     // Must add this line.
     await windowManager.ensureInitialized();
@@ -32,7 +32,7 @@ void main() async {
       await windowManager.show();
       await windowManager.focus();
     });
-  }
+  }*/
   runApp(const MyApp());
 }
 
@@ -44,21 +44,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: const MaterialColor(
-          0xFF0067b9,
-          {
-            50: Color.fromRGBO(0x00, 0x67, 0xb9, .1),
-            100: Color.fromRGBO(0x00, 0x67, 0xb9, .2),
-            200: Color.fromRGBO(0x00, 0x67, 0xb9, .3),
-            300: Color.fromRGBO(0x00, 0x67, 0xb9, .4),
-            400: Color.fromRGBO(0x00, 0x67, 0xb9, .5),
-            500: Color.fromRGBO(0x00, 0x67, 0xb9, .6),
-            600: Color.fromRGBO(0x00, 0x67, 0xb9, .7),
-            700: Color.fromRGBO(0x00, 0x67, 0xb9, .8),
-            800: Color.fromRGBO(0x00, 0x67, 0xb9, .9),
-            900: Color.fromRGBO(0x00, 0x67, 0xb9, 1),
-          },
-        ),
+        primarySwatch: Colors.deepPurple,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -80,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double _sliderValue = 10.0 / 31.0;
   Uint8List _secretSeed = Uint8List(32);
   List<int> _cipherText = [];
+  bool isEcb = false;
 
   final TextEditingController _seedController = TextEditingController();
   final TextEditingController _plainTextController = TextEditingController();
@@ -115,9 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+        //child: SingleChildScrollView(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               Text(
                 'Max Random: ${pow(2, _sliderValue * 31 + 1).ceil()}',
@@ -126,9 +113,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 value: _sliderValue,
                 divisions: 31,
                 onChanged: (value) {
-                  setState(() {
-                    _sliderValue = value;
-                  });
+                  //setState(() {
+                  _sliderValue = value;
+                  //});
                 },
               ),
               Text(
@@ -151,10 +138,25 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: const Text('Save Key'),
                   ),
                   const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _loadSecret,
-                    child: const Text('Load Key'),
+                  const ElevatedButton(
+                    onPressed: null, //_loadSecret,
+                    child: Text('Load Key'),
                   ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('CBC'),
+                  Switch(
+                    value: isEcb,
+                    onChanged: (value) {
+                      setState(() {
+                        isEcb = value;
+                      });
+                    },
+                  ),
+                  const Text('ECB'),
                 ],
               ),
               Row(
@@ -165,6 +167,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     flex: 10,
                     child: TextField(
                       controller: _plainTextController,
+                      maxLines: null,
+                      style: const TextStyle(fontFamily: 'Consolas'),
                     ),
                   ),
                   ElevatedButton(
@@ -179,7 +183,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     flex: 10,
                     child: TextField(
                       controller: _cipherTextController,
+                      style: const TextStyle(fontFamily: 'Consolas'),
                       readOnly: true,
+                      maxLines: null,
                     ),
                   ),
                   ElevatedButton(
@@ -201,13 +207,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               const NearbyDevices(),
             ]
-                .map((e) => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: e,
-                    ))
-                .toList(),
-          ),
-        ),
+            //.map((e) => Padding(padding: const EdgeInsets.all(8.0), child: e))
+            //.toList(),
+            ),
+        //),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _newRandom,
@@ -245,18 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _encryptText() async {
-    pCastle.PaddedBlockCipherImpl cipher = pCastle.PaddedBlockCipherImpl(
-      pCastle.ISO7816d4Padding(),
-      pCastle.CBCBlockCipher(pCastle.AESEngine()),
-    );
-
-    pCastle.PaddedBlockCipherParameters params =
-        pCastle.PaddedBlockCipherParameters(
-            pCastle.ParametersWithIV(
-                pCastle.KeyParameter(_secretSeed), Uint8List(cipher.blockSize)),
-            null);
-
-    cipher.init(true, params);
+    pCastle.PaddedBlockCipherImpl cipher = _getCipher(true);
 
     Uint8List plainText =
         Uint8List.fromList(_plainTextController.text.codeUnits);
@@ -267,18 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _decryptText() async {
-    pCastle.PaddedBlockCipherImpl cipher = pCastle.PaddedBlockCipherImpl(
-      pCastle.ISO7816d4Padding(),
-      pCastle.CBCBlockCipher(pCastle.AESEngine()),
-    );
-
-    pCastle.PaddedBlockCipherParameters params =
-        pCastle.PaddedBlockCipherParameters(
-            pCastle.ParametersWithIV(
-                pCastle.KeyParameter(_secretSeed), Uint8List(cipher.blockSize)),
-            null);
-
-    cipher.init(false, params);
+    pCastle.PaddedBlockCipherImpl cipher = _getCipher(false);
 
     try {
       Uint8List plainText = cipher.process(Uint8List.fromList(_cipherText));
@@ -302,18 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (result != null && result.files.single.path != null) {
       File file = File(result.files.single.path!);
       file.openRead();
-      pCastle.PaddedBlockCipherImpl cipher = pCastle.PaddedBlockCipherImpl(
-        pCastle.ISO7816d4Padding(),
-        pCastle.CBCBlockCipher(pCastle.AESEngine()),
-      );
-
-      pCastle.PaddedBlockCipherParameters params =
-          pCastle.PaddedBlockCipherParameters(
-              pCastle.ParametersWithIV(pCastle.KeyParameter(_secretSeed),
-                  Uint8List(cipher.blockSize)),
-              null);
-
-      cipher.init(true, params);
+      pCastle.PaddedBlockCipherImpl cipher = _getCipher(true);
 
       Uint8List plainText = file.readAsBytesSync();
       try {
@@ -326,7 +296,6 @@ class _MyHomePageState extends State<MyHomePage> {
           outputFile.openWrite();
           outputFile.writeAsBytesSync(cipherText);
           print(outputFile.path);
-          //await Share.share('test');
           Share.shareFiles([outputFile.path]);
         } else if (Platform.isWindows) {
           String? outputFilePath = await FilePicker.platform.saveFile(
@@ -361,22 +330,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (result != null && result.files.single.path != null) {
       File file = File(result.files.single.path!);
       file.openRead();
-      pCastle.PaddedBlockCipherImpl cipher = pCastle.PaddedBlockCipherImpl(
-        pCastle.ISO7816d4Padding(),
-        pCastle.CBCBlockCipher(pCastle.AESEngine()),
-      );
-
-      pCastle.SHA256Digest digest = pCastle.SHA256Digest();
-      Uint8List key = digest
-          .process(Uint8List(32)..buffer.asInt32List()[0] = _displayValue);
-
-      pCastle.PaddedBlockCipherParameters params =
-          pCastle.PaddedBlockCipherParameters(
-              pCastle.ParametersWithIV(
-                  pCastle.KeyParameter(key), Uint8List(cipher.blockSize)),
-              null);
-      print(key);
-      cipher.init(false, params);
+      pCastle.PaddedBlockCipherImpl cipher = _getCipher(false);
 
       Uint8List cipherText = file.readAsBytesSync();
       try {
@@ -415,6 +369,27 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       // User canceled the picker
     }
+  }
+
+  pCastle.PaddedBlockCipherImpl _getCipher(bool encrypt) {
+    pCastle.PaddedBlockCipherImpl cipher = pCastle.PaddedBlockCipherImpl(
+      pCastle.ISO7816d4Padding(),
+      isEcb
+          ? pCastle.ECBBlockCipher(pCastle.AESEngine())
+          : pCastle.CBCBlockCipher(pCastle.AESEngine()),
+    );
+
+    pCastle.PaddedBlockCipherParameters params =
+        pCastle.PaddedBlockCipherParameters(
+      isEcb
+          ? pCastle.KeyParameter(_secretSeed)
+          : pCastle.ParametersWithIV(
+              pCastle.KeyParameter(_secretSeed), Uint8List(cipher.blockSize)),
+      null,
+    );
+
+    cipher.init(encrypt, params);
+    return cipher;
   }
 }
 
