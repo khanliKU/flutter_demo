@@ -21,7 +21,6 @@ class _NearbyDevicesState extends State<NearbyDevices> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     if (Platform.isAndroid) {
       flutterReactiveBle = FlutterReactiveBle();
@@ -53,7 +52,8 @@ class _NearbyDevicesState extends State<NearbyDevices> {
                     _deviceStream = flutterReactiveBle.scanForDevices(
                         withServices: [],
                         scanMode: ScanMode.lowLatency).listen((device) {
-                      if (!_devices.contains(device.name)) {
+                      if (!_devices.contains(device.name) &&
+                          device.name != '') {
                         setState(() {
                           _devices.add(device.name);
                         });

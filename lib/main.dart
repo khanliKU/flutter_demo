@@ -1,4 +1,4 @@
-import 'dart:ffi';
+import 'dart:ffi' as ffi;
 import 'dart:io';
 // ignore: depend_on_referenced_packages
 import 'package:flutter/foundation.dart';
@@ -11,9 +11,28 @@ import 'package:pointycastle/export.dart' as pCastle;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:window_manager/window_manager.dart';
 import './devices.dart';
 
-void main() {
+void main() async {
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    WidgetsFlutterBinding.ensureInitialized();
+    // Must add this line.
+    await windowManager.ensureInitialized();
+
+    const WindowOptions windowOptions = WindowOptions(
+      minimumSize: Size(360, 360),
+      size: Size(800, 600),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
   runApp(const MyApp());
 }
 
@@ -69,11 +88,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    late DynamicLibrary dl;
+    late ffi.DynamicLibrary dl;
     if (Platform.isAndroid) {
-      dl = DynamicLibrary.open('libmy_random.so');
+      dl = ffi.DynamicLibrary.open('libmy_random.so');
     } else if (Platform.isWindows) {
-      dl = DynamicLibrary.open(path.join('my_random.dll'));
+      dl = ffi.DynamicLibrary.open(path.join('my_random.dll'));
     }
     _randomGenerator = MyRandom(dl);
   }
@@ -96,89 +115,98 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            Text(
-              'Max Random: ${pow(2, _sliderValue * 31 + 1).ceil()}',
-            ),
-            Slider(
-              value: _sliderValue,
-              divisions: 31,
-              onChanged: (value) {
-                setState(() {
-                  _sliderValue = value;
-                });
-              },
-            ),
-            Text(
-              '$_displayValue',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                const Text('Key: '),
-                Expanded(
-                  flex: 10,
-                  child: TextField(
-                    controller: _seedController,
-                    enabled: false,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Max Random: ${pow(2, _sliderValue * 31 + 1).ceil()}',
+              ),
+              Slider(
+                value: _sliderValue,
+                divisions: 31,
+                onChanged: (value) {
+                  setState(() {
+                    _sliderValue = value;
+                  });
+                },
+              ),
+              Text(
+                '$_displayValue',
+                style: Theme.of(context).textTheme.headline4,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Text('Key: '),
+                  Expanded(
+                    flex: 10,
+                    child: TextField(
+                      controller: _seedController,
+                      enabled: false,
+                    ),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: _saveSecret,
-                  child: const Text('Save Key'),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: _loadSecret,
-                  child: const Text('Load Key'),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                const Text('Plain text: '),
-                Expanded(
-                  flex: 10,
-                  child: TextField(
-                    controller: _plainTextController,
+                  ElevatedButton(
+                    onPressed: _saveSecret,
+                    child: const Text('Save Key'),
                   ),
-                ),
-                ElevatedButton(
-                    onPressed: _encryptText, child: const Text('Encrypt')),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                const Text('Cipher text: '),
-                Expanded(
-                  flex: 10,
-                  child: TextField(
-                    controller: _cipherTextController,
-                    readOnly: true,
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _loadSecret,
+                    child: const Text('Load Key'),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: _decryptText,
-                  child: const Text('Decrypt'),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton(
-                    onPressed: _encryptFile, child: const Text('Encrypt file')),
-                ElevatedButton(
-                    onPressed: _decryptFile, child: const Text('Decrypt file')),
-              ],
-            ),
-            const NearbyDevices(),
-          ],
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Text('Plain text: '),
+                  Expanded(
+                    flex: 10,
+                    child: TextField(
+                      controller: _plainTextController,
+                    ),
+                  ),
+                  ElevatedButton(
+                      onPressed: _encryptText, child: const Text('Encrypt')),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const Text('Cipher text: '),
+                  Expanded(
+                    flex: 10,
+                    child: TextField(
+                      controller: _cipherTextController,
+                      readOnly: true,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _decryptText,
+                    child: const Text('Decrypt'),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ElevatedButton(
+                      onPressed: _encryptFile,
+                      child: const Text('Encrypt file')),
+                  ElevatedButton(
+                      onPressed: _decryptFile,
+                      child: const Text('Decrypt file')),
+                ],
+              ),
+              const NearbyDevices(),
+            ]
+                .map((e) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: e,
+                    ))
+                .toList(),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

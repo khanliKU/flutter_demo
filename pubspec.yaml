@@ -74,6 +74,9 @@ dependencies:
   # Device info
   device_info_plus: ^8.0.0
 
+  # set window size
+  window_manager: ^0.2.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
